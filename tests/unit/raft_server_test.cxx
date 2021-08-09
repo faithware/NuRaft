@@ -298,8 +298,8 @@ int add_node_error_cases_test() {
 
     {   // Attempt to add more than one server at once.
         ptr<req_msg> req = cs_new<req_msg>
-                           ( (ulong)0, msg_type::add_server_request, 0, 0,
-                             (ulong)0, (ulong)0, (ulong)0 );
+                           ( (nuraft::nuraft::ulong)0, msg_type::add_server_request, 0, 0,
+                             (nuraft::nuraft::ulong)0, (nuraft::nuraft::ulong)0, (nuraft::nuraft::ulong)0 );
         for (size_t ii=1; ii<num_srvs; ++ii) {
             RaftPkg* ff = pkgs[ii];
             ptr<srv_config> srv = ff->getTestMgr()->get_srv_config();
@@ -316,8 +316,8 @@ int add_node_error_cases_test() {
 
     {   // Attempt to add server with wrong message type.
         ptr<req_msg> req = cs_new<req_msg>
-                           ( (ulong)0, msg_type::add_server_request, 0, 0,
-                             (ulong)0, (ulong)0, (ulong)0 );
+                           ( (nuraft::nuraft::ulong)0, msg_type::add_server_request, 0, 0,
+                             (nuraft::nuraft::ulong)0, (nuraft::nuraft::ulong)0, (nuraft::nuraft::ulong)0 );
         RaftPkg* ff = pkgs[1];
         ptr<srv_config> srv = ff->getTestMgr()->get_srv_config();
         ptr<buffer> buf(srv->serialize());
@@ -395,8 +395,8 @@ int add_node_error_cases_test() {
     };
     {   // Attempt to add S3 to S2 (non-leader), through RPC.
         ptr<req_msg> req = cs_new<req_msg>
-                           ( (ulong)0, msg_type::add_server_request, 0, 0,
-                             (ulong)0, (ulong)0, (ulong)0 );
+                           ( (nuraft::nuraft::ulong)0, msg_type::add_server_request, 0, 0,
+                             (nuraft::nuraft::ulong)0, (nuraft::nuraft::ulong)0, (nuraft::nuraft::ulong)0 );
         ptr<srv_config> srv = s3.getTestMgr()->get_srv_config();
         ptr<buffer> buf(srv->serialize());
         ptr<log_entry> log( cs_new<log_entry>
@@ -534,8 +534,8 @@ int remove_node_error_cases_test() {
 
     {   // Attempt to remove more than one server at once.
         ptr<req_msg> req = cs_new<req_msg>
-                           ( (ulong)0, msg_type::remove_server_request, 0, 0,
-                             (ulong)0, (ulong)0, (ulong)0 );
+                           ( (nuraft::nuraft::ulong)0, msg_type::remove_server_request, 0, 0,
+                             (nuraft::nuraft::ulong)0, (nuraft::nuraft::ulong)0, (nuraft::nuraft::ulong)0 );
         for (size_t ii=1; ii<num_srvs; ++ii) {
             RaftPkg* ff = pkgs[ii];
             ptr<srv_config> srv = ff->getTestMgr()->get_srv_config();
@@ -563,8 +563,8 @@ int remove_node_error_cases_test() {
     };
     {   // Attempt to remove S3 to S2 (non-leader), through RPC.
         ptr<req_msg> req = cs_new<req_msg>
-                           ( (ulong)0, msg_type::remove_server_request, 0, 0,
-                             (ulong)0, (ulong)0, (ulong)0 );
+                           ( (nuraft::nuraft::ulong)0, msg_type::remove_server_request, 0, 0,
+                             (nuraft::nuraft::ulong)0, (nuraft::nuraft::ulong)0, (nuraft::nuraft::ulong)0 );
         ptr<buffer> buf(buffer::alloc(sz_int));
         buf->put(s3.myId);
         buf->pos(0);
@@ -1917,7 +1917,7 @@ int join_empty_node_test() {
     return 0;
 }
 
-static int async_handler(std::list<ulong>* idx_list,
+static int async_handler(std::list<nuraft::nuraft::ulong>* idx_list,
                          ptr< cmd_result< ptr<buffer> > >& cmd_result,
                          cmd_result_code expected_code,
                          ptr<buffer>& result,
@@ -1927,7 +1927,7 @@ static int async_handler(std::list<ulong>* idx_list,
 
     if (expected_code == cmd_result_code::OK) {
         result->pos(0);
-        ulong idx = result->get_ulong();
+        nuraft::nuraft::ulong idx = result->get_ulong();
         if (idx_list) {
             idx_list->push_back(idx);
         }
@@ -1991,7 +1991,7 @@ int async_append_handler_test() {
     CHK_Z( wait_for_sm_exec(pkgs, COMMIT_TIMEOUT_SEC) );
 
     // Now all async handlers should have result.
-    std::list<ulong> idx_list;
+    std::list<nuraft::nuraft::ulong> idx_list;
     for (auto& entry: handlers) {
         ptr< cmd_result< ptr<buffer> > > result = entry;
         cmd_result< ptr<buffer> >::handler_type my_handler =
@@ -2097,7 +2097,7 @@ int async_append_handler_cancel_test() {
     CHK_Z( wait_for_sm_exec(pkgs, COMMIT_TIMEOUT_SEC) );
 
     // Now all async handlers should have been cancelled.
-    std::list<ulong> idx_list;
+    std::list<nuraft::nuraft::ulong> idx_list;
     for (auto& entry: handlers) {
         ptr< cmd_result< ptr<buffer> > > result = entry;
         cmd_result< ptr<buffer> >::handler_type my_handler =
@@ -2302,7 +2302,7 @@ int custom_term_counter_test() {
     CHK_Z( launch_servers( pkgs ) );
     CHK_Z( make_group( pkgs ) );
 
-    auto custom_term = [](ulong cur_term) -> ulong {
+    auto custom_term = [](nuraft::nuraft::ulong cur_term) -> nuraft::nuraft::ulong {
         // Increase by 10.
         return (cur_term / 10) + 10;
     };

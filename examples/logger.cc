@@ -960,7 +960,7 @@ int SimpleLogger::start() {
     SimpleLogger* ll = this;
     mgr->addLogger(ll);
 
-    _log_sys(ll, "Start logger: %s (%zu MB per file, up to %zu files)",
+    _log_sys(ll, "Start logger: %s (%llu MB per file, up to %zu files)",
              filePath.c_str(),
              maxLogFileSize / 1024 / 1024,
              maxLogFiles);

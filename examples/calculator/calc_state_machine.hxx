@@ -70,12 +70,12 @@ public:
         memcpy(&payload_out, bs.get_raw(log.size()), sizeof(op_payload));
     }
 
-    ptr<buffer> pre_commit(const ulong log_idx, buffer& data) {
+    ptr<buffer> pre_commit(const nuraft::ulong log_idx, buffer& data) {
         // Nothing to do with pre-commit in this example.
         return nullptr;
     }
 
-    ptr<buffer> commit(const ulong log_idx, buffer& data) {
+    ptr<buffer> commit(const nuraft::ulong log_idx, buffer& data) {
         op_payload payload;
         dec_log(data, payload);
 
@@ -99,19 +99,19 @@ public:
         return ret;
     }
 
-    void commit_config(const ulong log_idx, ptr<cluster_config>& new_conf) {
+    void commit_config(const nuraft::ulong log_idx, ptr<cluster_config>& new_conf) {
         // Nothing to do with configuration change. Just update committed index.
         last_committed_idx_ = log_idx;
     }
 
-    void rollback(const ulong log_idx, buffer& data) {
+    void rollback(const nuraft::ulong log_idx, buffer& data) {
         // Nothing to do with rollback,
         // as this example doesn't do anything on pre-commit.
     }
 
     int read_logical_snp_obj(snapshot& s,
                              void*& user_snp_ctx,
-                             ulong obj_id,
+                             nuraft::ulong obj_id,
                              ptr<buffer>& data_out,
                              bool& is_last_obj)
     {
@@ -136,7 +136,7 @@ public:
 
         } else {
             // Object ID > 0: second object, put actual value.
-            data_out = buffer::alloc( sizeof(ulong) );
+            data_out = buffer::alloc( sizeof(nuraft::ulong) );
             buffer_serializer bs(data_out);
             bs.put_u64( ctx->value_ );
             is_last_obj = true;
@@ -145,7 +145,7 @@ public:
     }
 
     void save_logical_snp_obj(snapshot& s,
-                              ulong& obj_id,
+                              nuraft::ulong& obj_id,
                               buffer& data,
                               bool is_first_obj,
                               bool is_last_obj)
@@ -193,7 +193,7 @@ public:
         return ctx->snapshot_;
     }
 
-    ulong last_commit_index() {
+    nuraft::ulong last_commit_index() {
         return last_committed_idx_;
     }
 

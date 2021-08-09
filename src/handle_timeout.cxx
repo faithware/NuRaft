@@ -296,14 +296,13 @@ void raft_server::handle_election_timeout() {
 
         ulong state_term = state_->get_term();
 
-        p_in( "[ELECTION TIMEOUT] current role: %s, log last term %lu, "
-              "state term %lu, target p %d, my p %d, %s, %s",
-              srv_role_to_string(role_).c_str(), last_log_term, state_term,
+        p_in( "[ELECTION TIMEOUT] current role: %s,size %d, log last term %llu, "
+              "state term %llu, target p %d, my p %d, %s, %s",
+              srv_role_to_string(role_).c_str(),sizeof(last_log_term), last_log_term, state_term,
               target_priority_, my_priority_,
               (hb_alive_) ? "hb alive" : "hb dead",
               (pre_vote_.done_) ? "pre-vote done" : "pre-vote NOT done");
-
-        // `term` changed, cannot use previous pre-vote result.
+     
         if (pre_vote_.term_ != state_term) {
             p_in("pre-vote term (%zu) is different, reset it to %zu",
                  pre_vote_.term_, state_term);

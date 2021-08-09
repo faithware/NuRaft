@@ -177,7 +177,7 @@ bool raft_server::commit_in_bg_exec(size_t timeout_ms) {
         std::function<void()> clean_func_;
     } exec_auto_cleaner([this](){ sm_commit_exec_in_progress_ = false; });
 
-    p_db( "commit upto %ld, curruent idx %ld\n",
+    p_db( "commit upto %llu, curruent idx %llu\n",
           quick_commit_index_.load(), sm_commit_index_.load() );
 
     ulong log_start_idx = log_store_->start_index();
@@ -254,7 +254,7 @@ bool raft_server::commit_in_bg_exec(size_t timeout_ms) {
                  index_to_commit);
         }
     }
-    p_db( "DONE: commit upto %ld, curruent idx %ld\n",
+    p_db( "DONE: commit upto %llu, curruent idx %llu\n",
           quick_commit_index_.load(), sm_commit_index_.load() );
     if (role_ == srv_role::follower) {
         ulong leader_idx = leader_commit_index_.load();
@@ -308,7 +308,7 @@ void raft_server::commit_app_log(ulong idx_to_commit,
                 elem->result_code_ = cmd_result_code::OK;
                 elem->ret_value_ = ret_value;
                 match_found = true;
-                p_dv("notify cb %ld %p", sm_idx, &elem->awaiter_);
+                p_dv("notify cb %llu %p", sm_idx, &elem->awaiter_);
 
                 switch (ctx_->get_params()->return_method_) {
                 case raft_params::blocking:
@@ -498,7 +498,7 @@ void raft_server::snapshot_and_compact(ulong committed_idx) {
         ulong log_term_to_compact = log_store_->term_at(committed_idx);
         ptr<snapshot> new_snapshot
             ( cs_new<snapshot>(committed_idx, log_term_to_compact, conf) );
-        p_in( "create snapshot idx %ld log_term %ld\n",
+        p_in( "create snapshot idx %llu log_term %llu\n",
               committed_idx, log_term_to_compact );
         cmd_result<bool>::handler_type handler =
             (cmd_result<bool>::handler_type)
@@ -509,7 +509,7 @@ void raft_server::snapshot_and_compact(ulong committed_idx) {
                        std::placeholders::_2 );
         timer_helper tt;
         state_machine_->create_snapshot(*new_snapshot, handler);
-        p_in( "create snapshot idx %ld log_term %ld done: %lu us elapsed\n",
+        p_in( "create snapshot idx %llu log_term %llu done: %lu us elapsed\n",
               committed_idx, log_term_to_compact, tt.get_us() );
 
         snapshot_in_action = false;
@@ -551,7 +551,7 @@ void raft_server::on_snapshot_completed
                  (ulong)params->reserved_log_items_ ) {
             ulong compact_upto = new_snp->get_last_log_idx() -
                                      (ulong)params->reserved_log_items_;
-            p_db("log_store_ compact upto %ld", compact_upto);
+            p_db("log_store_ compact upto %llu", compact_upto);
             log_store_->compact(compact_upto);
         }
     }
@@ -782,7 +782,7 @@ void raft_server::reconfigure(const ptr<cluster_config>& new_config) {
                 s_conf->get_priority());
         str_buf += temp_buf;
     }
-    p_in("new configuration: log idx %ld, prev log idx %ld\n"
+    p_in("new configuration: log idx %llu, prev log idx %llu\n"
          "%smy id: %d, leader: %d, term: %zu",
          new_config->get_log_idx(), new_config->get_prev_log_idx(),
          str_buf.c_str(), id_, leader_.load(), state_->get_term());

@@ -34,7 +34,7 @@ public:
 
     ~echo_state_machine() {}
 
-    ptr<buffer> pre_commit(const ulong log_idx, buffer& data) {
+    ptr<buffer> pre_commit(const nuraft::ulong log_idx, buffer& data) {
         // Extract string from `data.
         buffer_serializer bs(data);
         std::string str = bs.get_str();
@@ -45,7 +45,7 @@ public:
         return nullptr;
     }
 
-    ptr<buffer> commit(const ulong log_idx, buffer& data) {
+    ptr<buffer> commit(const nuraft::ulong log_idx, buffer& data) {
         // Extract string from `data.
         buffer_serializer bs(data);
         std::string str = bs.get_str();
@@ -59,12 +59,12 @@ public:
         return nullptr;
     }
 
-    void commit_config(const ulong log_idx, ptr<cluster_config>& new_conf) {
+    void commit_config(const nuraft::ulong log_idx, ptr<cluster_config>& new_conf) {
         // Nothing to do with configuration change. Just update committed index.
         last_committed_idx_ = log_idx;
     }
 
-    void rollback(const ulong log_idx, buffer& data) {
+    void rollback(const nuraft::ulong log_idx, buffer& data) {
         // Extract string from `data.
         buffer_serializer bs(data);
         std::string str = bs.get_str();
@@ -76,7 +76,7 @@ public:
 
     int read_logical_snp_obj(snapshot& s,
                              void*& user_snp_ctx,
-                             ulong obj_id,
+                             nuraft::ulong obj_id,
                              ptr<buffer>& data_out,
                              bool& is_last_obj)
     {
@@ -90,7 +90,7 @@ public:
     }
 
     void save_logical_snp_obj(snapshot& s,
-                              ulong& obj_id,
+                              nuraft::ulong& obj_id,
                               buffer& data,
                               bool is_first_obj,
                               bool is_last_obj)
@@ -121,7 +121,7 @@ public:
         return last_snapshot_;
     }
 
-    ulong last_commit_index() {
+    nuraft::ulong last_commit_index() {
         return last_committed_idx_;
     }
 

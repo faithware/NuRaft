@@ -52,37 +52,37 @@ public:
 
     ~TestSm() {}
 
-    ptr<buffer> commit(const ulong log_idx, buffer& data) {
+    ptr<buffer> commit(const nuraft::ulong log_idx, buffer& data) {
         std::lock_guard<std::mutex> ll(dataLock);
         commits[log_idx] = buffer::copy(data);
 
-        ptr<buffer> ret = buffer::alloc(sizeof(ulong));
+        ptr<buffer> ret = buffer::alloc(sizeof(nuraft::ulong));
         buffer_serializer bs(ret);
         bs.put_u64(log_idx);
         return ret;
     }
 
-    void commit_config(const ulong log_idx, ptr<cluster_config>& new_conf) {
+    void commit_config(const nuraft::ulong log_idx, ptr<cluster_config>& new_conf) {
         lastCommittedConfigIdx = log_idx;
     }
 
-    ptr<buffer> pre_commit(const ulong log_idx, buffer& data) {
+    ptr<buffer> pre_commit(const nuraft::ulong log_idx, buffer& data) {
         std::lock_guard<std::mutex> ll(dataLock);
         preCommits[log_idx] = buffer::copy(data);
 
-        ptr<buffer> ret = buffer::alloc(sizeof(ulong));
+        ptr<buffer> ret = buffer::alloc(sizeof(nuraft::ulong));
         buffer_serializer bs(ret);
         bs.put_u64(log_idx);
         return ret;
     }
 
-    void rollback(const ulong log_idx, buffer& data) {
+    void rollback(const nuraft::ulong log_idx, buffer& data) {
         std::lock_guard<std::mutex> ll(dataLock);
         rollbacks.push_back(log_idx);
     }
 
     void save_logical_snp_obj(snapshot& s,
-                              ulong& obj_id,
+                              nuraft::ulong& obj_id,
                               buffer& data,
                               bool is_first_obj,
                               bool is_last_obj)
@@ -98,7 +98,7 @@ public:
             return;
         }
 
-        if (data.size() == sizeof(ulong)) {
+        if (data.size() == sizeof(nuraft::ulong)) {
             // Special object representing config change.
             // Nothing to do for state machine.
             // Request next object.
@@ -107,7 +107,7 @@ public:
         }
 
         buffer_serializer bs(data);
-        ulong log_idx = bs.get_u64();
+        nuraft::ulong log_idx = bs.get_u64();
 
         // In this test state machine implementation,
         // obj id should be always the same as log index.
@@ -132,7 +132,7 @@ public:
 
     int read_logical_snp_obj(snapshot& s,
                              void*& user_snp_ctx,
-                             ulong obj_id,
+                             nuraft::ulong obj_id,
                              ptr<buffer>& data_out,
                              bool& is_last_obj)
     {
@@ -154,10 +154,10 @@ public:
         if (obj_id == 0) {
             // First object contains metadata:
             //   Put first log index and the last log index.
-            data_out = buffer::alloc( sizeof(ulong) * 2 );
+            data_out = buffer::alloc( sizeof(nuraft::ulong) * 2 );
             buffer_serializer bs(data_out);
 
-            ulong first_idx = 0;
+            nuraft::ulong first_idx = 0;
             auto entry = commits.begin();
             if (entry != commits.end()) {
                 first_idx = entry->first;
@@ -179,12 +179,12 @@ public:
         if (entry == commits.end()) {
             // Corresponding log number doesn't exist,
             // it happens when that log number is used for config change.
-            data_out = buffer::alloc( sizeof(ulong) );
+            data_out = buffer::alloc( sizeof(nuraft::ulong) );
             buffer_serializer bs(data_out);
             bs.put_u64( obj_id );
         } else {
             ptr<buffer> local_data = entry->second;
-            data_out = buffer::alloc( sizeof(ulong) + sizeof(int32) +
+            data_out = buffer::alloc( sizeof(nuraft::ulong) + sizeof(int32) +
                                       local_data->size() );
             buffer_serializer bs(data_out);
             bs.put_u64( obj_id );
@@ -222,7 +222,7 @@ public:
         return lastSnapshot;
     }
 
-    ulong last_commit_index() {
+    nuraft::ulong last_commit_index() {
         std::lock_guard<std::mutex> ll(dataLock);
         auto entry = commits.rbegin();
         if (entry == commits.rend()) return 0;
@@ -242,7 +242,7 @@ public:
         when_done(ret, except);
     }
 
-    void set_next_batch_size_hint_in_bytes(ulong to) {
+    void set_next_batch_size_hint_in_bytes(nuraft::ulong to) {
         customBatchSize = to;
     }
 
@@ -303,7 +303,7 @@ public:
         return true;
     }
 
-    ulong isCommitted(const std::string& msg) {
+    nuraft::ulong isCommitted(const std::string& msg) {
         std::lock_guard<std::mutex> ll(dataLock);
         for (auto& entry: commits) {
             ptr<buffer> bb = entry.second;
@@ -317,14 +317,14 @@ public:
         return 0;
     }
 
-    ptr<buffer> getData(ulong log_idx) const {
+    ptr<buffer> getData(nuraft::ulong log_idx) const {
         std::lock_guard<std::mutex> ll(dataLock);
         auto entry = commits.find(log_idx);
         if (entry == commits.end()) return nullptr;
         return entry->second;
     }
 
-    void truncateData(ulong log_idx_upto) {
+    void truncateData(nuraft::ulong log_idx_upto) {
         auto entry = preCommits.lower_bound(log_idx_upto);
         preCommits.erase(entry, preCommits.end());
         auto entry2 = commits.lower_bound(log_idx_upto);

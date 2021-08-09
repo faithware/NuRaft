@@ -745,13 +745,13 @@ int response_hint_test(bool with_meta) {
     return 0;
 }
 
-static void async_handler(std::list<ulong>* idx_list,
+static void async_handler(std::list<nuraft::ulong>* idx_list,
                           std::mutex* idx_list_lock,
                           ptr<buffer>& result,
                           ptr<std::exception>& err)
 {
     result->pos(0);
-    ulong idx = result->get_ulong();
+    nuraft::ulong idx = result->get_ulong();
     if (idx_list) {
         std::lock_guard<std::mutex> l(*idx_list_lock);
         idx_list->push_back(idx);
@@ -787,7 +787,7 @@ int async_append_handler_test() {
     // Append messages asynchronously.
     const size_t NUM = 10;
     std::list< ptr< cmd_result< ptr<buffer> > > > handlers;
-    std::list<ulong> idx_list;
+    std::list<nuraft::ulong> idx_list;
     std::mutex idx_list_lock;
     for (size_t ii=0; ii<NUM; ++ii) {
         std::string test_msg = "test" + std::to_string(ii);
@@ -2091,7 +2091,7 @@ int pause_state_machine_execution_test(bool use_global_mgr) {
     // Append messages asynchronously.
     const size_t NUM = 10;
     std::list< ptr< cmd_result< ptr<buffer> > > > handlers;
-    std::list<ulong> idx_list;
+    std::list<nuraft::ulong> idx_list;
     std::mutex idx_list_lock;
     auto do_async_append = [&]() {
         handlers.clear();

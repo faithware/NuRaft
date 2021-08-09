@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(NuRaft VERSION 1.0.0 LANGUAGES CXX)
-
+set(CMAKE_VERBOSE_MAKEFILE ON)
+if(NOT CMAKE_FIND_ROOT_PATH)
+set(CMAKE_FIND_ROOT_PATH "/home/iotblocks/Documents/LADE/buildroot/output/staging")
+endif ()
 # === Build type (default: RelWithDebInfo, O2) ===========
 if (NOT CMAKE_BUILD_TYPE)
     set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
@@ -83,7 +86,7 @@ if (NOT WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pessimizing-move")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-psabi ")
     if (APPLE)
         include_directories(BEFORE /usr/local/opt/openssl/include)
         link_directories(/usr/local/opt/openssl/lib)
@@ -270,7 +273,7 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/examples")
 
 
 # === Tests ===
-add_subdirectory("${PROJECT_SOURCE_DIR}/tests")
+#add_subdirectory("${PROJECT_SOURCE_DIR}/tests")
 
 
 if (CODE_COVERAGE GREATER 0)
