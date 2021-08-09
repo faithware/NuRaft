@@ -363,12 +363,12 @@ ptr<req_msg> raft_server::create_append_entries_req(ptr<peer>& pp) {
     if ( last_log_idx + 1 == peer_last_sent_idx &&
          last_log_idx + 2 < end_idx ) {
         int32 cur_cnt = p.inc_cnt_not_applied();
-        p_db("last sent log (%zu) to peer %d is not applied, cnt %d",
+        p_db("last sent log (%llu) to peer %d is not applied, cnt %d",
              peer_last_sent_idx, p.get_id(), cur_cnt);
         if (cur_cnt >= 5) {
             ulong prev_end_idx = end_idx;
             end_idx = std::min( cur_nxt_idx, last_log_idx + 1 + 1 );
-            p_db("reduce end_idx %zu -> %zu", prev_end_idx, end_idx);
+            p_db("reduce end_idx %llu -> %zu", prev_end_idx, end_idx);
         }
     } else {
         p.reset_cnt_not_applied();
@@ -504,9 +504,9 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
     } _s_req(&serving_req_);
     timer_helper tt;
 
-    p_tr("from peer %d, req type: %d, req term: %ld, "
-         "req l idx: %ld (%zu), req c idx: %ld, "
-         "my term: %ld, my role: %d\n",
+    p_tr("from peer %d, req type: %d, req term: %llu, "
+         "req l idx: %llu (%zu), req c idx: %llu, "
+         "my term: %llu, my role: %d\n",
          req.get_src(), (int)req.get_type(), req.get_term(),
          req.get_last_log_idx(), req.log_entries().size(), req.get_commit_idx(),
          state_->get_term(), (int)role_);
@@ -565,8 +565,8 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
         }
     }
     p_lv( log_lv,
-          "[LOG %s] req log idx: %zu, req log term: %zu, my last log idx: %zu, "
-          "my log (%zu) term: %zu",
+          "[LOG %s] req log idx: %llu, req log term: %llu, my last log idx: %llu, "
+          "my log (%llu) term: %llu",
           (log_okay ? "OK" : "XX"),
           req.get_last_log_idx(),
           req.get_last_log_term(),
@@ -577,11 +577,11 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
     if ( req.get_term() < state_->get_term() ||
          log_okay == false ) {
         p_lv( log_lv,
-              "deny, req term %zu, my term %zu, req log idx %zu, my log idx %zu",
+              "deny, req term %llu, my term %llu, req log idx %llu, my log idx %llu",
               req.get_term(), state_->get_term(),
               req.get_last_log_idx(), log_store_->next_slot() - 1 );
         if (local_snp) {
-            p_lv( log_lv, "snp idx %zu term %zu",
+            p_lv( log_lv, "snp idx %llu term %llu",
                   local_snp->get_last_log_idx(),
                   local_snp->get_last_log_term() );
         }
@@ -610,8 +610,8 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
         // Local counter for iterating req.log_entries().
         size_t cnt = 0;
 
-        p_db("[INIT] log_idx: %ld, count: %ld, log_store_->next_slot(): %ld, "
-             "req.log_entries().size(): %ld\n",
+        p_db("[INIT] log_idx: %llu, count: %llu, log_store_->next_slot(): %llu, "
+             "req.log_entries().size(): %llu\n",
              log_idx, cnt, log_store_->next_slot(), req.log_entries().size());
 
         // Skipping already existing (with the same term) logs.
@@ -626,7 +626,7 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
                 break;
             }
         }
-        p_db("[after SKIP] log_idx: %ld, count: %ld\n", log_idx, cnt);
+        p_db("[after SKIP] log_idx: %llu, count: %llu\n", log_idx, cnt);
 
         // Rollback (only if necessary).
         // WARNING:
@@ -638,8 +638,8 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
         bool rollback_in_progress = false;
         if ( my_last_log_idx >= log_idx &&
              cnt < req.log_entries().size() ) {
-            p_in( "rollback logs: %zu - %zu, commit idx req %zu, quick %zu, sm %zu, "
-                  "num log entries %zu, current count %zu",
+            p_in( "rollback logs: %llu - %llu, commit idx req %llu, quick %llu, sm %llu, "
+                  "num log entries %llu, current count %llu",
                   log_idx,
                   my_last_log_idx,
                   req.get_commit_idx(),
@@ -652,13 +652,13 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
             // should rollback commit index as well
             // (should not happen in Raft though).
             if ( quick_commit_index_ >= log_idx ) {
-                p_wn( "rollback quick commit index from %zu to %zu",
+                p_wn( "rollback quick commit index from %llu to %llu",
                       quick_commit_index_.load(),
                       log_idx - 1 );
                 quick_commit_index_ = log_idx - 1;
             }
             if ( sm_commit_index_ >= log_idx ) {
-                p_er( "rollback sm commit index from %zu to %zu, "
+                p_er( "rollback sm commit index from %llu to %llu, "
                       "it shouldn't happen and may indicate data loss",
                       sm_commit_index_.load(),
                       log_idx - 1 );
@@ -673,7 +673,7 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
                     buf->pos(0);
                     state_machine_->rollback_ext
                         ( state_machine::ext_op_params( idx, buf ) );
-                    p_in( "rollback log %zu, term %zu", idx, old_entry->get_term() );
+                    p_in( "rollback log %llu, term %llu", idx, old_entry->get_term() );
 
                 } else if (old_entry->get_val_type() == log_val_type::conf) {
                     p_in( "revert from a prev config change to config at %llu",
@@ -688,7 +688,7 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
                 cnt < req.log_entries().size() )
         {
             ptr<log_entry> entry = req.log_entries().at(cnt);
-            p_in("overwrite at %zu, term %zu\n", log_idx, entry->get_term());
+            p_in("overwrite at %llu, term %llu\n", log_idx, entry->get_term());
             store_log_entry(entry, log_idx);
 
             if (entry->get_val_type() == log_val_type::app_log) {
@@ -707,7 +707,7 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
 
             if (stopping_) return resp;
         }
-        p_db("[after OVWR] log_idx: %ld, count: %ld\n", log_idx, cnt);
+        p_db("[after OVWR] log_idx: %llu, count: %llu\n", log_idx, cnt);
 
         if (rollback_in_progress) {
             p_in("last log index after rollback and overwrite: %zu",
@@ -716,7 +716,7 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
 
         // Append new log entries
         while (cnt < req.log_entries().size()) {
-            p_tr("append at %zu\n", log_store_->next_slot());
+            p_tr("append at %llu\n", log_store_->next_slot());
             ptr<log_entry> entry = req.log_entries().at( cnt++ );
             ulong idx_for_entry = store_log_entry(entry);
             if (entry->get_val_type() == log_val_type::conf) {
@@ -793,9 +793,9 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
     if (time_ms >= ctx_->get_params()->heart_beat_interval_) {
         // Append entries took longer than HB interval. Warning.
         p_wn("appending entries from peer %d took long time (%d ms)\n"
-             "req type: %d, req term: %ld, "
-             "req l idx: %ld (%zu), req c idx: %ld, "
-             "my term: %ld, my role: %d\n",
+             "req type: %d, req term: %llu, "
+             "req l idx: %llu (%zu), req c idx: %llu, "
+             "my term: %llu, my role: %d\n",
              req.get_src(), time_ms, (int)req.get_type(), req.get_term(),
              req.get_last_log_idx(), req.log_entries().size(), req.get_commit_idx(),
              state_->get_term(), (int)role_);
@@ -810,7 +810,7 @@ ptr<resp_msg> raft_server::handle_append_entries(req_msg& req)
 
     int64 bs_hint = state_machine_->get_next_batch_size_hint_in_bytes();
     resp->set_next_batch_size_hint_in_bytes(bs_hint);
-    p_tr("batch size hint: %ld bytes", bs_hint);
+    p_tr("batch size hint: %llu bytes", bs_hint);
 
     out_of_log_range_ = false;
 
@@ -835,7 +835,7 @@ bool raft_server::try_update_precommit_index(ulong desired, const size_t MAX_ATT
         return true;
     }
     p_er("updating precommit_index_ failed after %zu/%zu attempts, "
-         "last seen precommit_index_ %zu, target %zu",
+         "last seen precommit_index_ %llu, target %llu",
          num_attempts, MAX_ATTEMPTS, prev_precommit_index, desired);
     return false;
 }
@@ -854,7 +854,7 @@ void raft_server::handle_append_entries_resp(resp_msg& resp) {
          resp.get_next_idx() > srv_to_leave_target_idx_ ) {
         // Catch-up is done.
         p_in("server to be removed %d fully caught up the "
-             "target config log %zu",
+             "target config log %llu",
              srv_to_leave_->get_id(),
              srv_to_leave_target_idx_);
         remove_peer_from_peers(srv_to_leave_);
@@ -867,11 +867,11 @@ void raft_server::handle_append_entries_resp(resp_msg& resp) {
     bool need_to_catchup = true;
 
     ptr<peer> p = it->second;
-    p_tr("handle append entries resp (from %d), resp.get_next_idx(): %zu\n",
+    p_tr("handle append entries resp (from %d), resp.get_next_idx(): %llu\n",
          (int)p->get_id(), resp.get_next_idx());
 
     int64 bs_hint = resp.get_next_batch_size_hint_in_bytes();
-    p_tr("peer %d batch size hint: %ld bytes", p->get_id(), bs_hint);
+    p_tr("peer %d batch size hint: %llu bytes", p->get_id(), bs_hint);
     p->set_next_batch_size_hint_in_bytes(bs_hint);
 
     if (resp.get_accepted()) {
@@ -882,7 +882,7 @@ void raft_server::handle_append_entries_resp(resp_msg& resp) {
             p->set_next_log_idx(resp.get_next_idx());
             prev_matched_idx = p->get_matched_idx();
             new_matched_idx = resp.get_next_idx() - 1;
-            p_tr("peer %d, prev matched idx: %ld, new matched idx: %ld",
+            p_tr("peer %d, prev matched idx: %llu, new matched idx: %llu",
                  p->get_id(), prev_matched_idx, new_matched_idx);
             p->set_matched_idx(new_matched_idx);
         }
@@ -922,8 +922,8 @@ void raft_server::handle_append_entries_resp(resp_msg& resp) {
             }
         }
         p_lv( log_lv,
-              "declined append: peer %d, prev next log idx %zu, "
-              "resp next %zu, new next log idx %zu",
+              "declined append: peer %d, prev next log idx %llu, "
+              "resp next %llu, new next log idx %llu",
               p->get_id(), prev_next_log,
               resp.get_next_idx(), p->get_next_log_idx() );
     }
@@ -943,7 +943,7 @@ void raft_server::handle_append_entries_resp(resp_msg& resp) {
         //   response handler (of heartbeat, append_entries ..) will
         //   retry this.
         p_in("ready to resign, server id %d, "
-             "latest log index %zu, "
+             "latest log index %llu, "
              "%zu us elapsed, resign now",
              next_leader_candidate_.load(),
              p_matched_idx,

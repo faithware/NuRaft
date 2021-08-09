@@ -180,7 +180,7 @@ void snapshot_io_mgr::async_io_loop() {
             logger* l_ = elem->raft_->l_.get();
             ulong obj_idx = elem->sync_ctx_->get_offset();
             void*& user_snp_ctx = elem->sync_ctx_->get_user_snp_ctx();
-            p_db("peer: %d, obj_idx: %ld, user_snp_ctx %p\n",
+            p_db("peer: %d, obj_idx: %llu, user_snp_ctx %p\n",
                  dst_id, obj_idx, user_snp_ctx);
 
             ulong snp_log_idx = elem->snapshot_->get_last_log_idx();

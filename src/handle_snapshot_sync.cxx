@@ -199,7 +199,7 @@ ptr<req_msg> raft_server::create_sync_snapshot_req(ptr<peer>& pp,
         sync_ctx = p.get_snapshot_sync_ctx();
         ulong obj_idx = sync_ctx->get_offset();
         void*& user_snp_ctx = sync_ctx->get_user_snp_ctx();
-        p_dv("peer: %d, obj_idx: %ld, user_snp_ctx %p\n",
+        p_dv("peer: %d, obj_idx: %llu, user_snp_ctx %p\n",
              (int)p.get_id(), obj_idx, user_snp_ctx);
 
         int rc = state_machine_->read_logical_snp_obj( *snp, user_snp_ctx, obj_idx,

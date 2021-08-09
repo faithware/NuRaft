@@ -1009,7 +1009,7 @@ public:
                 std::string _unit =
                     (unit.empty()) ? "" : unit + " ";
 
-                _msg("\r%s%ld/%ld %s(%.1f%%)",
+                _msg("\r%s%llu/%llu %s(%.1f%%)",
                      _comment.c_str(), curValue, num, _unit.c_str(),
                      (double)curValue*100/num);
                 fflush(stdout);
@@ -1051,7 +1051,7 @@ public:
                 std::string _unit =
                     (unit.empty()) ? "" : unit + " ";
 
-                _msg("\r%s%ld %s", _comment.c_str(), curValue, _unit.c_str());
+                _msg("\r%s%llu %s", _comment.c_str(), curValue, _unit.c_str());
                 fflush(stdout);
             }
         }

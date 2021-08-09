@@ -130,8 +130,8 @@ void raft_server::request_prevote() {
         }
     }
 
-    p_in("[PRE-VOTE INIT] my id %d, my role %s, term %ld, log idx %ld, "
-         "log term %ld, priority (target %d / mine %d)\n",
+    p_in("[PRE-VOTE INIT] my id %d, my role %s, term %llu, log idx %llu, "
+         "log term %llu, priority (target %d / mine %d)\n",
          id_, srv_role_to_string(role_).c_str(),
          state_->get_term(), log_store_->next_slot() - 1,
          term_for_log(log_store_->next_slot() - 1),
@@ -220,8 +220,8 @@ void raft_server::request_vote(bool force_vote) {
     ctx_->state_mgr_->save_state(*state_);
     votes_granted_ += 1;
     votes_responded_ += 1;
-    p_in("[VOTE INIT] my id %d, my role %s, term %ld, log idx %ld, "
-         "log term %ld, priority (target %d / mine %d)\n",
+    p_in("[VOTE INIT] my id %d, my role %s, term %llu, log idx %llu, "
+         "log term %llu, priority (target %d / mine %d)\n",
          id_, srv_role_to_string(role_).c_str(),
          state_->get_term(), log_store_->next_slot() - 1,
          term_for_log(log_store_->next_slot() - 1),
@@ -273,8 +273,8 @@ void raft_server::request_vote(bool force_vote) {
 }
 
 ptr<resp_msg> raft_server::handle_vote_req(req_msg& req) {
-    p_in("[VOTE REQ] my role %s, from peer %d, log term: req %ld / mine %ld\n"
-         "last idx: req %ld / mine %ld, term: req %ld / mine %ld\n"
+    p_in("[VOTE REQ] my role %s, from peer %d, log term: req %llu / mine %llu\n"
+         "last idx: req %llu / mine %llu, term: req %llu / mine %llu\n"
          "priority: target %d / mine %d, voted_for %d",
          srv_role_to_string(role_).c_str(),
          req.get_src(), req.get_last_log_term(), log_store_->last_entry()->get_term(),
@@ -326,13 +326,13 @@ ptr<resp_msg> raft_server::handle_vote_req(req_msg& req) {
             }
         }
 
-        p_in("decision: O (grant), voted_for %d, term %zu",
+        p_in("decision: O (grant), voted_for %d, term %llu",
              req.get_src(), resp->get_term());
         resp->accept(log_store_->next_slot());
         state_->set_voted_for(req.get_src());
         ctx_->state_mgr_->save_state(*state_);
     } else {
-        p_in("decision: X (deny), term %zu", resp->get_term());
+        p_in("decision: X (deny), term %llu", resp->get_term());
     }
 
     return resp;
@@ -347,7 +347,7 @@ void raft_server::handle_vote_resp(resp_msg& resp) {
     if (resp.get_term() != state_->get_term()) {
         // Vote response for other term. Should ignore it.
         p_in("[VOTE RESP] from peer %d, my role %s, "
-             "but different resp term %zu. ignore it.",
+             "but different resp term %llu. ignore it.",
              resp.get_src(), srv_role_to_string(role_).c_str(), resp.get_term());
         return;
     }
@@ -363,7 +363,7 @@ void raft_server::handle_vote_resp(resp_msg& resp) {
 
     int32 election_quorum_size = get_quorum_for_election() + 1;
 
-    p_in("[VOTE RESP] peer %d (%s), resp term %zu, my role %s, "
+    p_in("[VOTE RESP] peer %d (%s), resp term %llu, my role %s, "
          "granted %d, responded %d, "
          "num voting members %d, quorum %d\n",
          resp.get_src(), (resp.get_accepted()) ? "O" : "X", resp.get_term(),
@@ -372,10 +372,10 @@ void raft_server::handle_vote_resp(resp_msg& resp) {
          get_num_voting_members(), election_quorum_size);
 
     if (votes_granted_ >= election_quorum_size) {
-        p_in("Server is elected as leader for term %zu", state_->get_term());
+        p_in("Server is elected as leader for term %llu", state_->get_term());
         election_completed_ = true;
         become_leader();
-        p_in("  === LEADER (term %zu) ===\n", state_->get_term());
+        p_in("  === LEADER (term %llu) ===\n", state_->get_term());
     }
 }
 
@@ -387,8 +387,8 @@ ptr<resp_msg> raft_server::handle_prevote_req(req_msg& req) {
         next_idx_for_resp = std::numeric_limits<ulong>::max();
     }
 
-    p_in("[PRE-VOTE REQ] my role %s, from peer %d, log term: req %ld / mine %ld\n"
-         "last idx: req %ld / mine %ld, term: req %ld / mine %ld\n"
+    p_in("[PRE-VOTE REQ] my role %s, from peer %d, log term: req %llu / mine %llu\n"
+         "last idx: req %llu / mine %llu, term: req %llu / mine %llu\n"
          "%s",
          srv_role_to_string(role_).c_str(),
          req.get_src(), req.get_last_log_term(),
@@ -431,7 +431,7 @@ void raft_server::handle_prevote_resp(resp_msg& resp) {
     if (resp.get_term() != pre_vote_.term_) {
         // Vote response for other term. Should ignore it.
         p_in("[PRE-VOTE RESP] from peer %d, my role %s, "
-             "but different resp term %zu (pre-vote term %zu). "
+             "but different resp term %llu (pre-vote term %llu). "
              "ignore it.",
              resp.get_src(), srv_role_to_string(role_).c_str(),
              resp.get_term(), pre_vote_.term_);
@@ -454,7 +454,7 @@ void raft_server::handle_prevote_resp(resp_msg& resp) {
 
     int32 election_quorum_size = get_quorum_for_election() + 1;
 
-    p_in("[PRE-VOTE RESP] peer %d (%s), term %zu, resp term %zu, "
+    p_in("[PRE-VOTE RESP] peer %d (%s), term %llu, resp term %llu, "
          "my role %s, dead %d, live %d, "
          "num voting members %d, quorum %d\n",
          resp.get_src(), (resp.get_accepted())?"O":"X",
@@ -464,7 +464,7 @@ void raft_server::handle_prevote_resp(resp_msg& resp) {
          get_num_voting_members(), election_quorum_size);
 
     if (pre_vote_.dead_ >= election_quorum_size) {
-        p_in("[PRE-VOTE DONE] SUCCESS, term %zu", pre_vote_.term_);
+        p_in("[PRE-VOTE DONE] SUCCESS, term %llu", pre_vote_.term_);
 
         bool exp = false;
         bool val = true;

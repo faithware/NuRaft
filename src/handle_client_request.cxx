@@ -165,7 +165,7 @@ ptr<resp_msg> raft_server::handle_cli_req(req_msg& req) {
     } else {
         // Async replication:
         //   Immediately return with the result of pre-commit.
-        p_dv( "asynchronously replicated %ld, return value %p\n",
+        p_dv( "asynchronously replicated %llu, return value %p\n",
               last_idx, ret_value.get() );
         resp->set_ctx(ret_value);
     }

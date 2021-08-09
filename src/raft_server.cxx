@@ -986,7 +986,7 @@ void raft_server::become_leader() {
         ptr<log_entry> entry
             ( cs_new<log_entry>
               ( state_->get_term(), conf_buf, log_val_type::conf ) );
-        p_in("[BECOME LEADER] appended new config at %d\n", log_store_->next_slot());
+        p_in("[BECOME LEADER] appended new config at %llu\n", log_store_->next_slot());
         store_log_entry(entry);
         config_changing_ = true;
     }
@@ -1452,7 +1452,7 @@ ulong raft_server::term_for_log(ulong log_idx) {
             p_er("last snapshot %p, log_idx %llu, snapshot last_log_idx %llu\n",
                  last_snapshot.get(), log_idx, last_snapshot->get_last_log_idx());
         }
-        p_er("log_store_->start_index() %ld\n", log_store_->start_index());
+        p_er("log_store_->start_index() %llu\n", log_store_->start_index());
         //ctx_->state_mgr_->system_exit(raft_err::N19_bad_log_idx_for_term);
         //::exit(-1);
         return 0L;
