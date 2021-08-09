@@ -269,7 +269,7 @@ endif ()
 message(STATUS "Output library file name: ${LIBRARY_OUTPUT_NAME}")
 
 # === Examples ===
-add_subdirectory("${PROJECT_SOURCE_DIR}/examples")
+#add_subdirectory("${PROJECT_SOURCE_DIR}/examples")
 
 
 # === Tests ===
