@@ -1606,13 +1606,14 @@ CbReturnCode raft_server::invoke_callback( cb_func::Type type,
     case  cb_func::Type::BecomeFollower:
     case  cb_func::Type::NewSessionFromLeader:
     case  cb_func::Type::ConnectionClosed:
-    CbReturnCode rc = ctx_->cb_func_.call(type, param);
+    {
+        CbReturnCode rc = ctx_->cb_func_.call(type, param);
     return rc;    /* code */
-        break;
-    
+        
+    }
     default:
     return CbReturnCode::Ok;
-        break;
+        
     }
  
 }
