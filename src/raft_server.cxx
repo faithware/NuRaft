@@ -1599,8 +1599,22 @@ ulong raft_server::store_log_entry(ptr<log_entry>& entry, ulong index) {
 CbReturnCode raft_server::invoke_callback( cb_func::Type type,
                                            cb_func::Param* param )
 {
+  
+    switch (type)
+    {
+    case  cb_func::Type::BecomeLeader:
+    case  cb_func::Type::BecomeFollower:
+    case  cb_func::Type::NewSessionFromLeader:
+    case  cb_func::Type::ConnectionClosed:
     CbReturnCode rc = ctx_->cb_func_.call(type, param);
-    return rc;
+    return rc;    /* code */
+        break;
+    
+    default:
+    return CbReturnCode::Ok;
+        break;
+    }
+ 
 }
 
 void raft_server::set_inc_term_func(srv_state::inc_term_func func) {
